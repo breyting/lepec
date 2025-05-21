@@ -1,182 +1,195 @@
 <!DOCTYPE html>
 <html lang="fr">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Interpréteur en Ligne</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .container {
-      flex: 1;
-      display: flex;
-      height: 100%;
-    }
-
-    .left-panel {
-      width: 50%;
-      padding: 20px;
-      border-right: 1px solid #ddd;
-      background-color: #f9f9f9;
-      overflow-y: auto;
-    }
-
-    .right-panel {
-      width: 50%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #editor {
-      flex: 1;
-    }
-
-    #output {
-      height: 20vh;
-      padding: 1em;
-      background: #f0f0f0;
-      overflow: auto;
-      font-family: monospace;
-      border-top: 1px solid #ccc;
-    }
-
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-      align-self: flex-start;
-    }
-
-    button:hover {
-      background-color: #c1c53c;
-      color: #0d0a0a;
-      cursor: pointer;
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="container">
-    <div class="left-panel">
-      <h2>Support de cours</h2>
-
-
-      <input type="file" id="pdf-upload" accept="application/pdf" />
-
-      <div id="pdf-viewer-container" style="margin-top: 1em;">
-        <!-- Le PDF s'affichera ici -->
-        <iframe id="pdf-viewer" style="width: 100%; height: 500px;" hidden></iframe>
-        <button id="remove-pdf" style="margin-top: 0.5em; display: none;">
-          Retirer le PDF
-        </button>
-
-      </div>
-      <script>
-        let currentPdfURL = null;
-
-        document.getElementById('pdf-upload').addEventListener('change', function (e) {
-          const file = e.target.files[0];
-          if (!file || file.type !== 'application/pdf') {
-            alert('Veuillez sélectionner un fichier PDF.');
-            return;
-          }
-
-          // Nettoie l'ancien PDF si nécessaire
-          if (currentPdfURL) {
-            URL.revokeObjectURL(currentPdfURL);
-          }
-
-          currentPdfURL = URL.createObjectURL(file);
-          const viewer = document.getElementById('pdf-viewer');
-          viewer.src = currentPdfURL;
-          viewer.hidden = false;
-
-          // Affiche le bouton de suppression
-          document.getElementById('remove-pdf').style.display = 'inline-block';
-        });
-
-        document.getElementById('remove-pdf').addEventListener('click', function () {
-          const viewer = document.getElementById('pdf-viewer');
-
-          if (currentPdfURL) {
-            URL.revokeObjectURL(currentPdfURL);
-            currentPdfURL = null;
-          }
-
-          viewer.src = '';
-          viewer.hidden = true;
-
-          // Cache le bouton et réinitialise l'input
-          this.style.display = 'none';
-          document.getElementById('pdf-upload').value = '';
-        });
-
-      </script>
-    </div>
-
-    <div class="right-panel">
-      <h2 style="text-align:center;">Mini Interpréteur en Ligne</h2>
-      <div id="editor"></div>
-      <button onclick="runCode()" title="Raccourci : Ctrl + Entrée">Exécuter</button>
-      <pre id="output">Résultat...</pre>
-    </div>
-  </div>
-
-  <!-- Monaco Editor loader -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
-  <script>
-    let editor;
-
-    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
-    require(['vs/editor/editor.main'], function () {
-      editor = monaco.editor.create(document.getElementById('editor'), {
-        value: `print("Bonjour le monde !")`,
-        language: 'python',
-        theme: 'vs-dark',
-        automaticLayout: true
-      });
-
-      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function () {
-        runCode();
-      });
-    });
-
-    function runCode() {
-      document.getElementById('output').textContent = 'Envois du code. En attente du résultat...'
-      const code = editor.getValue();
-
-      fetch('/run', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ code: code })
-      })
-        .then(res => res.text())
-        .then(output => {
-          document.getElementById('output').textContent = output;
-        })
-        .catch(err => {
-          document.getElementById('output').textContent = 'Erreur : ' + err;
-        });
-    }
-
-    document.addEventListener('keydown', function (e) {
-      // Vérifie si Ctrl + Entrée est pressé
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        runCode();
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interpréteur en Ligne</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
       }
-    });
-  </script>
-</body>
 
+      .container {
+        flex: 1;
+        display: flex;
+        height: 100%;
+      }
+
+      .left-panel {
+        width: 50%;
+        padding-left: 20px;
+        border-right: 1px solid #ddd;
+        background-color: #f9f9f9;
+        overflow-y: auto;
+      }
+
+      .right-panel {
+        width: 50%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #editor {
+        flex: 1;
+      }
+
+      #output {
+        height: 20vh;
+        padding: 1em;
+        background: #f0f0f0;
+        overflow: auto;
+        font-family: monospace;
+        border-top: 1px solid #ccc;
+      }
+
+      button {
+        margin: 10px;
+        padding: 10px 20px;
+        align-self: flex-start;
+      }
+
+      button:hover {
+        background-color: #c1c53c;
+        color: #0d0a0a;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="left-panel">
+        <h2 style="text-align: center">Support de cours</h2>
+
+        <input type="file" id="pdf-upload" accept="application/pdf" />
+
+        <div id="pdf-viewer-container" style="margin-top: 1em">
+          <!-- Le PDF s'affichera ici -->
+          <iframe
+            id="pdf-viewer"
+            style="width: 100%; height: 500px"
+            hidden
+          ></iframe>
+          <button id="remove-pdf" style="margin-top: 0.5em; display: none">
+            Retirer le PDF
+          </button>
+        </div>
+        <script>
+          let currentPdfURL = null;
+
+          document
+            .getElementById("pdf-upload")
+            .addEventListener("change", function (e) {
+              const file = e.target.files[0];
+              if (!file || file.type !== "application/pdf") {
+                alert("Veuillez sélectionner un fichier PDF.");
+                return;
+              }
+
+              // Nettoie l'ancien PDF si nécessaire
+              if (currentPdfURL) {
+                URL.revokeObjectURL(currentPdfURL);
+              }
+
+              currentPdfURL = URL.createObjectURL(file);
+              const viewer = document.getElementById("pdf-viewer");
+              viewer.src = currentPdfURL;
+              viewer.hidden = false;
+
+              // Affiche le bouton de suppression
+              document.getElementById("remove-pdf").style.display =
+                "inline-block";
+            });
+
+          document
+            .getElementById("remove-pdf")
+            .addEventListener("click", function () {
+              const viewer = document.getElementById("pdf-viewer");
+
+              if (currentPdfURL) {
+                URL.revokeObjectURL(currentPdfURL);
+                currentPdfURL = null;
+              }
+
+              viewer.src = "";
+              viewer.hidden = true;
+
+              // Cache le bouton et réinitialise l'input
+              this.style.display = "none";
+              document.getElementById("pdf-upload").value = "";
+            });
+        </script>
+      </div>
+
+      <div class="right-panel">
+        <h2 style="text-align: center">Mini Interpréteur en Ligne</h2>
+        <div id="editor"></div>
+        <button onclick="runCode()" title="Raccourci : Ctrl + Entrée">
+          Exécuter
+        </button>
+        <pre id="output">Résultat...</pre>
+      </div>
+    </div>
+
+    <!-- Monaco Editor loader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <script>
+      let editor;
+
+      require.config({
+        paths: {
+          vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs",
+        },
+      });
+      require(["vs/editor/editor.main"], function () {
+        editor = monaco.editor.create(document.getElementById("editor"), {
+          value: `print("Bonjour le monde !")`,
+          language: "python",
+          theme: "vs-dark",
+          automaticLayout: true,
+        });
+
+        editor.addCommand(
+          monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+          function () {
+            runCode();
+          }
+        );
+      });
+
+      function runCode() {
+        document.getElementById("output").textContent =
+          "Envois du code. En attente du résultat...";
+        const code = editor.getValue();
+
+        fetch("/run", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ code: code }),
+        })
+          .then((res) => res.text())
+          .then((output) => {
+            document.getElementById("output").textContent = output;
+          })
+          .catch((err) => {
+            document.getElementById("output").textContent = "Erreur : " + err;
+          });
+      }
+
+      document.addEventListener("keydown", function (e) {
+        // Vérifie si Ctrl + Entrée est pressé
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          runCode();
+        }
+      });
+    </script>
+  </body>
 </html>
