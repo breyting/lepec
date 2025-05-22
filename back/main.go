@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// Servir le fichier index.html
-	http.Handle("/", http.FileServer(http.Dir("../front")))
+	http.Handle("/", http.FileServer(http.Dir("../front/html")))
 
 	http.HandleFunc("/run", runHandler)
 	// Démarrer le serveur sur le port 8080
