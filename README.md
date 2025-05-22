@@ -25,8 +25,11 @@ Autres points de développement plus impactant :
 
 ## logiciels nécessaires
 
-Ici se trouve la liste des logiciels nécessaire pour le bon fonctionnement du site.
+Ici se trouve la liste des logiciels nécessaire pour le bon fonctionnement du site sur le serveur.
 
-Docker
-Python
 Golang
+
+## Frameworks utilisés
+
+Monaco-Editors (pour l'éditeur de code)
+Pyodide (pour l'execution du code côté client)
